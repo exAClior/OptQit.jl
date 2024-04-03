@@ -3,6 +3,12 @@ uuid = "d846f483-8851-4402-9577-d08b1818ce16"
 authors = ["Yusheng Zhao <yushengzhao2020@outlook.com> and contributors"]
 version = "1.0.0-DEV"
 
+[deps]
+Convex = "f65535da-76fb-5f13-bab9-19810c17039a"
+MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+SCS = "c946c3f1-0d1f-5ce8-9dea-7daa1f7e2d13"
+Yao = "5872b779-8223-5990-8dd0-5abbb0748c8c"
+
 [compat]
 julia = "1"
 

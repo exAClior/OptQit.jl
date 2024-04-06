@@ -15,14 +15,18 @@
 # If you are looking to implement your own solver in Julia. You might find this [paper](http://euler.nmt.edu/~brian/csdppaper.pdf) useful. 
 
 using Mosek, MosekTools
-using Convex, SCS 
-A = [ 0.47213595 0.11469794+0.48586827im; 0.11469794-0.48586827im  0.52786405]
+using Convex, SCS
+
+A = [0.47213595 0.11469794+0.48586827im; 0.11469794-0.48586827im 0.52786405]
 B = ComplexVariable(2, 2)
 ρ = kron(A, B)
-constraints = [partialtrace(ρ, 1, [2; 2]) == [1 0; 0 0]
-               tr(ρ) == 1
-               ρ in :SDP]
+
+constraints = [
+    partialtrace(ρ, 1, [2; 2]) == [1 0; 0 0]
+    tr(ρ) == 1
+    ρ in :SDP
+]
 p = satisfy(constraints)
-@time solve!(p, Mosek.Optimizer; silent_solver = true)
-@time solve!(p, SCS.Optimizer; silent_solver = true)
+@time solve!(p, Mosek.Optimizer; silent_solver=true)
+@time solve!(p, SCS.Optimizer; silent_solver=true)
 p.status

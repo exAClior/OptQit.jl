@@ -26,8 +26,8 @@ function eg1()
     ρ = ComplexVariable(2^n_qubits, 2^n_qubits)
 
     num_meas = 5
-    meas_ops = [mat(kron(rand([X,Y,Z],n_qubits)...)) for _ in 1:num_meas]
-    meas_vals = [tr(σ*meas_ops[i]) for i in 1:num_meas] 
+    meas_ops = [mat(kron(rand([X, Y, Z], n_qubits)...)) for _ in 1:num_meas]
+    meas_vals = [tr(σ * meas_ops[i]) for i in 1:num_meas]
 
     constrains = [
         ρ in :SDP,
@@ -40,8 +40,8 @@ function eg1()
 
     @show p
     res = evaluate(ρ)
-    @show res 
-    @assert all([tr(res*meas_ops[i]) ≈ meas_vals[i] for i in 1:num_meas])
+    @show res
+    @assert all([tr(res * meas_ops[i]) ≈ meas_vals[i] for i in 1:num_meas])
 end
 
 eg1()
@@ -57,7 +57,7 @@ function eg2()
 
     num_meas = 5
     meas_ops = [rand_hermitian(2^n_qubits) for _ in 1:num_meas]
-    meas_vals = [tr(σ*meas_ops[i])+rand(0:0.001) for i in 1:num_meas] 
+    meas_vals = [tr(σ * meas_ops[i]) + rand(0:0.001) for i in 1:num_meas]
 
     constrains = [
         ρ ⪰ 0,
@@ -65,17 +65,15 @@ function eg2()
         [tr(M_i * ρ) == m_i for (M_i, m_i) in zip(meas_ops, meas_vals)]...,
     ]
 
-
-    p = minimize(nuclearnorm(ρ - σ)/2.0, constrains)
+    p = minimize(nuclearnorm(ρ - σ) / 2.0, constrains)
     solve!(p, optimizer; silent_solver=true)
 
     @show p.status
     @show p.optval
     res = evaluate(ρ)
-    @show  res 
-    @assert res ≈ σ 
+    @show res
+    @assert res ≈ σ
 end
-
 
 function eg3()
     optimizer = Mosek.Optimizer
@@ -87,25 +85,24 @@ function eg3()
 
     num_meas = 5
     meas_ops = [rand_hermitian(2^n_qubits) for _ in 1:num_meas]
-    meas_vals = [tr(σ*meas_ops[i])+rand(0:0.001) for i in 1:num_meas] 
+    meas_vals = [tr(σ * meas_ops[i]) + rand(0:0.001) for i in 1:num_meas]
 
     constrains = [
         ρ ⪰ 0,
         tr(ρ) == 1,
         [tr(M_i * ρ) == m_i for (M_i, m_i) in zip(meas_ops, meas_vals)]...,
-        ρ - σ ⪰ - op_X,
+        ρ - σ ⪰ -op_X,
         ρ - σ ⪯ op_X,
     ]
 
-
-    p = minimize(real(tr(op_X)/2.0), constrains)
+    p = minimize(real(tr(op_X) / 2.0), constrains)
     solve!(p, optimizer; silent_solver=true)
 
     @show p.status
     @show p.optval
     res = evaluate(ρ)
-    @show  res 
-    @assert res ≈ σ 
+    @show res
+    @assert res ≈ σ
 end
 
 # %% [markdown]
@@ -113,24 +110,26 @@ end
 
 # %% 
 function eg4()
-    sub_system_dim = 2 
+    sub_system_dim = 2
     num_sys = 3
     epsilon = 0.0001
-    σ = state(rand_density_matrix(num_sys, nlevel=sub_system_dim))
+    σ = state(rand_density_matrix(num_sys; nlevel=sub_system_dim))
 
     ρ = ComplexVariable(sub_system_dim^num_sys, sub_system_dim^num_sys)
-    
-    ρXY = partialtrace(σ,3, repeat([sub_system_dim], num_sys) )
-    ρXZ = partialtrace(σ,2, repeat([sub_system_dim], num_sys) )
-    ρYZ = partialtrace(σ,1, repeat([sub_system_dim], num_sys) )
 
+    ρXY = partialtrace(σ, 3, repeat([sub_system_dim], num_sys))
+    ρXZ = partialtrace(σ, 2, repeat([sub_system_dim], num_sys))
+    ρYZ = partialtrace(σ, 1, repeat([sub_system_dim], num_sys))
 
     constrains = [
         ρ ⪰ 0,
         tr(ρ) == 1,
-        nuclearnorm(partialtrace(ρ,3,repeat([sub_system_dim],num_sys)) - ρXY)/2.0 <= epsilon ,
-        nuclearnorm(partialtrace(ρ,2,repeat([sub_system_dim],num_sys)) - ρXZ)/2.0 <= epsilon,
-        nuclearnorm(partialtrace(ρ,1,repeat([sub_system_dim],num_sys)) - ρYZ) /2.0 <= epsilon,
+        nuclearnorm(partialtrace(ρ, 3, repeat([sub_system_dim], num_sys)) - ρXY) / 2.0 <=
+        epsilon,
+        nuclearnorm(partialtrace(ρ, 2, repeat([sub_system_dim], num_sys)) - ρXZ) / 2.0 <=
+        epsilon,
+        nuclearnorm(partialtrace(ρ, 1, repeat([sub_system_dim], num_sys)) - ρYZ) / 2.0 <=
+        epsilon,
     ]
 
     p = satisfy(constrains)
@@ -142,7 +141,6 @@ function eg4()
     @show res
     @show res .- σ
 end
-
 
 eg4()
 

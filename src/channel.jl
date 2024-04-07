@@ -21,5 +21,5 @@ function ispsd_wit(A::AbstractMatrix{T}; tol::Real=eps(real(T))^(3 / 4)) where T
     ishermitian(A) || return false, zeros(T,size(A, 1)) 
     S = (A + A') / 2
     evals, evecs = eigen(S)
-    return evals[1] >= -tol, T(evecs[:, 1])
+    return evals[1] >= -tol, T.(evecs[:, 1])
 end

@@ -1,6 +1,6 @@
 module OptQit
 
-using Convex,SCS, LinearAlgebra
+using Convex, SCS, LinearAlgebra
 # Write your package code here.
 
 export ispsd, ispsd_wit

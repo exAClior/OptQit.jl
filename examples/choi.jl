@@ -2,6 +2,7 @@
 using Pkg;
 Pkg.activate(dirname(@__FILE__));
 using OptQit, Yao, MosekTools, Convex
+using SCS
 using LinearAlgebra
 using Test
 """
@@ -9,11 +10,6 @@ Use Semidefinite Programming to find the Choi representation of a channel.
 The channel maps ρ1 to σ1 and ρ2 to σ2.
 
 Following https://shuvomoy.github.io/blogs/posts/Solving_semidefinite_programming_problems_in_Julia/
-
-# TODO
-This is the naive version without considering c1 and c2 which
-always gives a solution and the validity of the solution is 
-guaranteed when only c1 = 1.0 and c2 = 0.0.
 """
 function sdp_Choi_rep(
     ρ1::AbstractMatrix,
@@ -26,30 +22,20 @@ function sdp_Choi_rep(
     N_A = size(ρ1, 1)
     N_B = size(σ1, 1)
 
-    A_qubits = Yao.log2i(N_A)
-    B_qubits = Yao.log2i(N_B)
-
     # this is a CP map from A'A to A'B
     J1 = ComplexVariable(N_A * N_B, N_A * N_B)
-    # c1 = Variable()
-    # c2 = Variable()
 
     constraints = [
         J1 ⪰ 0,
-        partialtrace(J1, 1, [N_A, N_B]) == LinearAlgebra.I(N_B),
+        partialtrace(J1, 2, [N_A, N_B]) == LinearAlgebra.I(N_A),
         partialtrace(J1 * kron(ρ1', LinearAlgebra.I(N_B)), 1, [N_A, N_B]) == σ1,
         partialtrace(J1 * kron(ρ2', LinearAlgebra.I(N_B)), 1, [N_A, N_B]) == σ2,
     ]
 
-    # p = minimize(c1+c2, constraints)
     p = satisfy(constraints)
 
     solve!(p, optimizer; silent_solver=silent)
-    @show typeof(p.status), p.status
-    p.status != :Optimal || return error("SDP failed to find a solution")
-    # (c1 == 1.0 && c2 == 0.0) || return error("Invalid solution")
-
-    # return evaluate(J1), evaluate(c1), evaluate(c2)
+    # p.status != Convex.MathOptInterface.OPTIMAL && return error("SDP failed to find a solution")
     return evaluate(J1)
 end
 
@@ -59,7 +45,7 @@ end
     ρ1 = rand_density_matrix(num_qubits).state
     ρ2 = rand_density_matrix(num_qubits).state
 
-    J1 = sdp_Choi_rep(ρ1, ρ2, ρ1, ρ2)
+    J1 = sdp_Choi_rep(ρ1, ρ2, ρ1, ρ2;optimizer=SCS.Optimizer)
 
     @test isapprox(
         partial_tr(

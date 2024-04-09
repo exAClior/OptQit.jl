@@ -31,7 +31,6 @@ p = satisfy(constraints)
 @time solve!(p, SCS.Optimizer; silent_solver=true)
 p.status
 
-
 # %% [markdown]
 # # Convex Optimization
 # Optimization is useful in life. An optimization problem can be defined  
@@ -62,4 +61,3 @@ p.status
 # For an optimization problem to be convex, we need to guarantee that the constraint and the objective function are convex. This is done via DCP. It is basically a derivation rule that tells you from the convexity of component of a function whether the function is convex or not. And there are function that is neither convex or concave i.e sin. 
 # ## Reference
 # 1. [What is Mathematical Optimization](https://www.youtube.com/watch?v=AM6BY4btj-M) is a set of videos that explains basics of convex optimization
-

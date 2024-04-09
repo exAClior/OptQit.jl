@@ -45,7 +45,7 @@ end
     ρ1 = rand_density_matrix(num_qubits).state
     ρ2 = rand_density_matrix(num_qubits).state
 
-    J1 = sdp_Choi_rep(ρ1, ρ2, ρ1, ρ2;optimizer=SCS.Optimizer)
+    J1 = sdp_Choi_rep(ρ1, ρ2, ρ1, ρ2; optimizer=SCS.Optimizer)
 
     @test isapprox(
         partial_tr(

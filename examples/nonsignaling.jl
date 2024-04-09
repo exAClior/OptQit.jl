@@ -4,8 +4,6 @@ Pkg.activate(dirname(@__FILE__));
 using OptQit, Yao, MosekTools, Convex
 using LinearAlgebra
 
-import Convex.partialtrace
-
 # operator must be a quantum channel
 function choi_of_op(op::AbstractMatrix)
     dim = size(op, 1)
@@ -36,16 +34,6 @@ function target(Mis)
         tr(s1 * partialtrace(Mis[3] * kron(s0, I(2)), 1, [2, 2])) +
         tr(s0 * partialtrace(Mis[4] * kron(s0, I(2)), 1, [2, 2]))
     ) / 4.0
-end
-
-function partialtrace(a, syss::Vector{Int}, dims::Vector{Int})
-    syss_sorted = sort(syss; rev=true)
-    dims = copy(dims)
-    for sys in syss_sorted
-        a = partialtrace(a, sys, dims)
-        dims = deleteat!(dims, sys)
-    end
-    return a
 end
 
 function deutsch(
@@ -85,7 +73,7 @@ function deutsch(
 
     obj = maximize(target(Mis), constraints)
 
-    solve!(obj, optimizer; silent=silent)
+    solve!(obj, optimizer; silent_solver=silent)
 
     return value(J_pi), obj.optval
 end

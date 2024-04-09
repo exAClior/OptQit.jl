@@ -37,7 +37,7 @@ function sdp_Choi_rep(
         partialtrace(Jn * kron(ρ2', LinearAlgebra.I(N_B)), 1, [N_A, N_B]) == σ2,
     ]
 
-    obj = minimize(c1+c2, constraints)
+    obj = minimize(c1 + c2, constraints)
 
     solve!(obj, optimizer; silent_solver=silent)
     return evaluate(J1), evaluate(J2), evaluate(c1), evaluate(c2)
@@ -49,11 +49,11 @@ end
     ρ1 = state(rand_density_matrix(num_qubits))
     ρ2 = state(rand_density_matrix(num_qubits))
 
-    J1,J2,c1,c2 = sdp_Choi_rep(ρ1, ρ2, ρ1, ρ2; optimizer=SCS.Optimizer)
+    J1, J2, c1, c2 = sdp_Choi_rep(ρ1, ρ2, ρ1, ρ2; optimizer=SCS.Optimizer)
 
     c1
-    @test isapprox(c1, 1.0,atol= 1e-3)
-    @test isapprox(c2, 0.0,atol= 1e-3)
+    @test isapprox(c1, 1.0, atol=1e-3)
+    @test isapprox(c2, 0.0, atol=1e-3)
 
     @test isapprox(
         partial_tr(
@@ -85,8 +85,8 @@ end
 
     J1, J2, c1, c2 = sdp_Choi_rep(ρ1, ρ2, σ1, σ2)
 
-    @test c1 ≈ 1.0 atol=1e-8
-    @test c2 ≈ 0.0 atol=1e-8
+    @test c1 ≈ 1.0 atol = 1e-8
+    @test c2 ≈ 0.0 atol = 1e-8
 
     @test isapprox(
         partial_tr(

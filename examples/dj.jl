@@ -10,7 +10,7 @@ function fj(j::Int, n::Int)
 end
 
 function Uj(j::Int)
-    res = zeros(8, 8)
+    res = zeros(ComplexF64,8, 8)
     for n in 1:4
         y = fj(j, n)
         res[(n - 1) * 2 + y + 1, (n - 1) * 2 + 1] = 1
@@ -24,27 +24,49 @@ function Uj(j::Int)
     return res
 end
 
-function deutsch_joza_yao(n::Int, U_f, D)
-    res = ComplexF64(0.0)
-    Pjs = Matrix{ComplexF64}[]
+function deutsch_joza(Pjs::AbstractVector{MT}, U_fs::AbstractVector{MT};optimizer=Mosek.Optimizer, silent=true) where MT<:AbstractMatrix
+    n = 2
+    res = 0.0
 
-    for k in 1:4
-        pj = zeros(ComplexF64, 4)
-        pj[k] = 1
-        push!(Pjs, kron(pj * pj', mat(I2)))
-    end
+
+    # order is Aq1, Aq2, Aq3, Bq1, Bq2, Bq3
+    Jd = ComplexVariable((2^(n+1))^2, (2^(n+1))^2)
+
+    constraints = [Jd ⪰ 0, partialtrace(Jd, [4,5,6], [2, 2,2,2, 2, 2]) == LinearAlgebra.I(2^(n+1))]
 
     for j in 0:3
         psi = zero_state(n + 1)
         apply!(psi, repeat(n + 1, H, collect(1:(n + 1))))
-        apply!(psi, put(n + 1, (1:3) => matblock(U_f)))
-        apply!(psi, put(n + 1, (1:3) => matblock(D)))
-        res += tr(state(density_matrix(psi)) * Pjs[j + 1]) / 4.0
+        apply!(psi, put(n + 1, (1:n+1) => matblock(U_fs[j+1])))
+        # apply U_r
+        # applya U_f again, the second query
+
+        ρ = state(density_matrix(psi))
+        fin_state = partialtrace(
+            Jd * kron(transpose(ρ), LinearAlgebra.I(2^(n+1))), [1, 2,3], [2, 2,2,2, 2, 2]
+        )
+        res += real(tr(fin_state * Pjs[j + 1]) / 4.0)
     end
-    return res
+
+    obj = maximize(res, constraints)
+    solve!(obj, optimizer; silent_solver=silent)
+    return evaluate(Jd), obj.optval
+
+
 end
 
-deutsch_joza_yao(2, Uj(0), rand_unitary(8))
+@testset "Deutsch Joza" begin
+
+    Pjs = [kron(mat(projector(product_state(2, i - 1))),[1.0 0.0;0.0 1.0]) for i in 1:4]
+
+    U_fs = [Uj(j) for j in 1:4]
+
+    D_channel, op_val = deutsch_joza(Pjs, U_fs; optimizer=Mosek.Optimizer, silent=true)
+
+    op_val
+    D_channel
+    @test isapprox(op_val, 0.25, atol=1e-6)
+end
 
 function O_f(n::Int)
     res = diagm(ones(ComplexF64, 4))

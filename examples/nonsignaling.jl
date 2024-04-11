@@ -1,6 +1,6 @@
 # %%
 using Pkg;
-Pkg.activate(dirname(@__FILE__));
+Pkg.activate(@__DIR__);
 using OptQit, Yao, MosekTools, Convex
 using LinearAlgebra
 
@@ -28,11 +28,11 @@ end
 function target(Mis)
     s0 = state(density_matrix(product_state(bit"0")))
     s1 = state(density_matrix(product_state(bit"1")))
-    return (
-        tr(s0 * partialtrace(Mis[1] * kron(s0, I(2)), 1, [2, 2])) +
-        tr(s1 * partialtrace(Mis[2] * kron(s0, I(2)), 1, [2, 2])) +
-        tr(s1 * partialtrace(Mis[3] * kron(s0, I(2)), 1, [2, 2])) +
-        tr(s0 * partialtrace(Mis[4] * kron(s0, I(2)), 1, [2, 2]))
+    return real(
+        tr(s0 * partialtrace(Mis[1] * kron(transpose(s0), I(2)), 1, [2, 2])) +
+        tr(s1 * partialtrace(Mis[2] * kron(transpose(s0), I(2)), 1, [2, 2])) +
+        tr(s1 * partialtrace(Mis[3] * kron(transpose(s0), I(2)), 1, [2, 2])) +
+        tr(s0 * partialtrace(Mis[4] * kron(transpose(s0), I(2)), 1, [2, 2]))
     ) / 4.0
 end
 
@@ -48,14 +48,15 @@ function deutsch(
         [1 0 0 0; 0 0 0 0; 0 0 0 0; 0 0 0 1],
         [0 0 0 0; 0 1 0 0; 0 0 1 0; 0 0 0 0],
     ]
+
     # order is A_i, B_i, A_o, B_o
-    J_pi = ComplexVariable(2^n_a * 2^n_b * 2^n_a * 2^n_b, 2^n_a * 2^n_b * 2^n_a * 2^n_b)
+    J_pi = ComplexVariable(2^(2*n_a) * 2^(2*n_b) * 2^(2*n_a) * 2^(2*n_b), 2^(2*n_a) * 2^(2*n_b) * 2^(2*n_a) * 2^(2*n_b))
 
     constraints = [
         J_pi in :SDP,
-        partialtrace(J_pi, [3, 4], [2^n_a, 2^n_b, 2^n_a, 2^n_b]) ==
-        LinearAlgebra.I(2^n_a * 2^n_b),
-        partialtrace(J_pi, 4, [2^n_a, 2^n_b, 2^n_a, 2^n_b]) ==
+        partialtrace(J_pi, [3, 4], [2^(2*n_a), 2^(2*n_b), 2^(2*n_a), 2^(2*n_b)]) ==
+        LinearAlgebra.I(2^(2*n_a) * 2^(2*n_b)),
+        partialtrace(J_pi, 4, [2^(2*n_a), 2^(2*n_b), 2^(2*n_a), 2^(2*n_b)]) ==
         partialtrace(J_pi, 3, [2^n_a, 2^n_b, 2^n_a, 2^n_b]),
         partialtrace(J_pi, 3, [2^n_a, 2^n_b, 2^n_a, 2^n_b]) == kron(
             partialtrace(J_pi, [2, 4], [2^n_a, 2^n_b, 2^n_a, 2^n_b]),
@@ -75,5 +76,6 @@ function deutsch(
 
     solve!(obj, optimizer; silent_solver=silent)
 
+    @show obj.optval
     return value(J_pi), obj.optval
 end

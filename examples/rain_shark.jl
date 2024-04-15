@@ -15,30 +15,38 @@ z = Semidefinite(2) # alias for  Variable((m, m), NoSign(), ContVar)
 z = ComplexVariable(size) # alias for Variable(size,ComplexSign(),ContVar)
 
 # %% [markdown]
-# Ofcourse, it is easy to define your own variables. For example, let's define a probability amplitude variable
+# Ofcourse, it is easy to define your own variables. 
+# For example, let's define a probability vector variable
 
 # %%
-mutable struct ProbabilityAmpVector <: Convex.AbstractVariable
+mutable struct ProbabilityVector <: Convex.AbstractVariable
     head::Symbol
     id_hash::UInt64
     size::Tuple{Int, Int}
     value::Convex.ValueOrNothing
     vexity::Convex.Vexity
-    function ProbabilityAmpVector(d)
-        this = new(:ProbabilityAmpVector, 0, (d,1), nothing, Convex.AffineVexity())
+    function ProbabilityVector(d)
+        this = new(:ProbabilityVector, 0, (d,1), nothing, Convex.AffineVexity())
         this.id_hash = objectid(this)
         this
     end
 end
 
-Convex.constraints(p::ProbabilityAmpVector) = [ norm(p,2) == 1 ]
-Convex.sign(::ProbabilityAmpVector) = Convex.ComplexSign()
-Convex.vartype(::ProbabilityAmpVector) = Convex.ContVar
+Convex.constraints(p::ProbabilityVector) = [ sum(p) == 1 ]
+Convex.sign(::ProbabilityVector) = Convex.Positive()
+Convex.vartype(::ProbabilityVector) = Convex.ContVar
 
 (p::ProbabilityVector)(x) = dot(p, x)
 
-x1 = Variable(1)
-x2 = Variable()
+p = ProbabilityVector(3)
+x = [1.0, -2.0, 3.0]
+prob = minimize( p(x) )
+solve!(prob, Mosek.Optimizer)
+evaluate(p) # [1.0, 0.0, 0.0]
+
+# %% [markdown]
+# Let's follow an example
+x1,x2 = Variable(2)
 
 
 # %% [markdown]

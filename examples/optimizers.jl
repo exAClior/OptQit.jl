@@ -14,6 +14,8 @@
 
 # If you are looking to implement your own solver in Julia. You might find this [paper](http://euler.nmt.edu/~brian/csdppaper.pdf) useful. 
 
+using Pkg;
+Pkg.activate(dirname(@__FILE__));
 using Mosek, MosekTools
 using Convex, SCS
 

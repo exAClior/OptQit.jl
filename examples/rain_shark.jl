@@ -30,10 +30,8 @@ x1,x2 = Variable(2)
 # Notice, the special way of building expression from variables 
 # Go back to slides now.
 
-
 constraints = [
     sqrt(1 + square(x1)) + square(x2) <= 3
-    # square(x1) + square(x2) <= 1
 ]
 
 objective = minimize(x1 + x2, constraints)
@@ -44,10 +42,6 @@ objective.status
 objective.optval
 evaluate(x1)
 evaluate(x2)
-
-
-
-
 
 x1 = Variable(2)
 x2 = Variable(1)
@@ -64,9 +58,10 @@ constraints = [
     # square(x1[2]) + square(x2) <= 1
 ]
 
-objective = minimize(x1[2] + x2, constraints)
+objective = maximize(square(x1[2]) + square(x2), constraints)
 
 solve!(objective, Mosek.Optimizer)
+
 
 objective.status
 objective.optval

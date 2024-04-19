@@ -25,19 +25,15 @@ z = ComplexVariable(size) # alias for Variable(size,ComplexSign(),ContVar)
 
 x1,x2 = Variable(2)
 
-
 # %% [markdown]
 # The next step is to define the constraints and the objective function
 # Notice, the special way of building expression from variables 
 # Go back to slides now.
 
-arr = Matrix{Float64}[]
-push!(arr, rand(2,2))
-push!(arr, rand(4,4))
 
 constraints = [
-    sqrt(1 + square(x1)) + square(x2) <= 1
-    square(x1) + square(x2) <= 1
+    sqrt(1 + square(x1)) + square(x2) <= 3
+    # square(x1) + square(x2) <= 1
 ]
 
 objective = minimize(x1 + x2, constraints)
@@ -49,6 +45,34 @@ objective.optval
 evaluate(x1)
 evaluate(x2)
 
+
+
+
+
+x1 = Variable(2)
+x2 = Variable(1)
+
+# %% [markdown]
+# The next step is to define the constraints and the objective function
+# Notice, the special way of building expression from variables 
+# Go back to slides now.
+
+
+constraints = [
+    norm(x1) + square(x2) <= 10,
+    x1[1] == 1,
+    # square(x1[2]) + square(x2) <= 1
+]
+
+objective = minimize(x1[2] + x2, constraints)
+
+solve!(objective, Mosek.Optimizer)
+
+objective.status
+objective.optval
+evaluate(x1[1])
+evaluate(x1[2])
+evaluate(x2)
 
 
 
